@@ -192,6 +192,8 @@
     </style>
 </head>
 
+p
+
 <body>
 
     <!-- HTML: kotak judul -->
@@ -294,6 +296,10 @@
 
         var facilityCache = {};
         var obstacleCache = {};
+        var routeCache = {};
+        var zoneCache = {};
+
+        var geometryEditMode = null;
 
         // 4. Fungsi warna jalur
         function routeColor(category) {
@@ -385,51 +391,71 @@
         }
 
         // 8. Layer jalur pedestrian
-        fetch('/api/routes')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: function(feature) {
-                        return {
-                            color: routeColor(feature.properties.category),
-                            weight: 5,
-                            opacity: 0.85
-                        };
-                    },
-                    onEachFeature: function(feature, layer) {
-                        layer.bindPopup(`
-                            <b>${feature.properties.route_name}</b><br>
-                            Kategori: ${feature.properties.category}<br>
-                            Skor: ${feature.properties.score}<br>
-                            ${feature.properties.description}
-                        `);
-                    }
-                }).addTo(routesLayer);
-            });
+        function loadRoutes() {
+            routesLayer.clearLayers();
+            routeCache = {};
+
+            fetch('/api/routes')
+                .then(response => response.json())
+                .then(data => {
+                    L.geoJSON(data, {
+                        style: function(feature) {
+                            return {
+                                color: routeColor(feature.properties.category),
+                                weight: 5,
+                                opacity: 0.85
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            routeCache[feature.properties.id] = feature.properties;
+
+                            layer.bindPopup(`
+                        <b>${feature.properties.route_name}</b><br>
+                        Kategori: ${feature.properties.category}<br>
+                        Skor: ${feature.properties.score}<br>
+                        ${feature.properties.description}<br><br>
+                        <button onclick="editRouteAttribute(${feature.properties.id})">Edit Atribut</button>
+                        <button onclick="startEditRouteGeometry(${feature.properties.id})">Edit Bentuk</button>
+                        <button onclick="deleteRoute(${feature.properties.id})">Hapus</button>
+                    `);
+                        }
+                    }).addTo(routesLayer);
+                });
+        }
 
         // 9. Layer zona kenyamanan
-        fetch('/api/zones')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: function(feature) {
-                        return {
-                            color: zoneColor(feature.properties.comfort_level),
-                            fillColor: zoneColor(feature.properties.comfort_level),
-                            fillOpacity: 0.25,
-                            weight: 2
-                        };
-                    },
-                    onEachFeature: function(feature, layer) {
-                        layer.bindPopup(`
-                            <b>${feature.properties.zone_name}</b><br>
-                            Tingkat kenyamanan: ${feature.properties.comfort_level}<br>
-                            Skor: ${feature.properties.score}<br>
-                            ${feature.properties.description}
-                        `);
-                    }
-                }).addTo(zonesLayer);
-            });
+        function loadZones() {
+            zonesLayer.clearLayers();
+            zoneCache = {};
+
+            fetch('/api/zones')
+                .then(response => response.json())
+                .then(data => {
+                    L.geoJSON(data, {
+                        style: function(feature) {
+                            return {
+                                color: zoneColor(feature.properties.comfort_level),
+                                fillColor: zoneColor(feature.properties.comfort_level),
+                                fillOpacity: 0.25,
+                                weight: 2
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            zoneCache[feature.properties.id] = feature.properties;
+
+                            layer.bindPopup(`
+                        <b>${feature.properties.zone_name}</b><br>
+                        Tingkat kenyamanan: ${feature.properties.comfort_level}<br>
+                        Skor: ${feature.properties.score}<br>
+                        ${feature.properties.description}<br><br>
+                        <button onclick="editZoneAttribute(${feature.properties.id})">Edit Atribut</button>
+                        <button onclick="startEditZoneGeometry(${feature.properties.id})">Edit Bentuk</button>
+                        <button onclick="deleteZone(${feature.properties.id})">Hapus</button>
+                    `);
+                        }
+                    }).addTo(zonesLayer);
+                });
+        }
 
         // 10. Layer control
         var overlayMaps = {
@@ -495,6 +521,77 @@
             var layer = event.layer;
             var layerType = event.layerType;
             var drawType = document.getElementById('drawType').value;
+
+            // Mode edit bentuk/geometri
+            if (geometryEditMode !== null) {
+                if (geometryEditMode.type === 'route') {
+                    if (layerType !== 'polyline') {
+                        alert('Untuk mengedit bentuk jalur, gunakan garis/polyline.');
+                        return;
+                    }
+
+                    var oldData = geometryEditMode.data;
+                    var wkt = polylineToWKT(layer);
+
+                    fetch('/api/routes/' + geometryEditMode.id, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                route_name: oldData.route_name,
+                                score: oldData.score,
+                                category: oldData.category,
+                                description: oldData.description,
+                                wkt: wkt
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            geometryEditMode = null;
+                            alert(data.message);
+                            location.reload();
+                        });
+
+                    return;
+                }
+
+                if (geometryEditMode.type === 'zone') {
+                    if (layerType !== 'polygon') {
+                        alert('Untuk mengedit bentuk zona, gunakan polygon/area.');
+                        return;
+                    }
+
+                    var oldData = geometryEditMode.data;
+                    var wkt = polygonToWKT(layer);
+
+                    fetch('/api/zones/' + geometryEditMode.id, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                zone_name: oldData.zone_name,
+                                score: oldData.score,
+                                comfort_level: oldData.comfort_level,
+                                description: oldData.description,
+                                wkt: wkt
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            geometryEditMode = null;
+                            alert(data.message);
+                            location.reload();
+                        });
+
+                    return;
+                }
+            }
 
             // Tambah fasilitas kampus
             if (drawType === 'facility') {
@@ -772,6 +869,130 @@
 
         loadFacilities();
         loadObstacles();
+        loadRoutes();
+        loadZones();
+        loadStatistics();
+
+        function editRouteAttribute(id) {
+            var data = routeCache[id];
+
+            var routeName = prompt('Edit nama jalur:', data.route_name);
+            if (!routeName) return;
+
+            var score = prompt('Edit skor walkability 0-5:', data.score);
+            var category = getCategoryFromScore(score);
+            var description = prompt('Edit deskripsi:', data.description);
+
+            fetch('/api/routes/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        route_name: routeName,
+                        score: score,
+                        category: category,
+                        description: description
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function deleteRoute(id) {
+            if (!confirm('Yakin ingin menghapus jalur pedestrian ini?')) return;
+
+            fetch('/api/routes/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function editZoneAttribute(id) {
+            var data = zoneCache[id];
+
+            var zoneName = prompt('Edit nama zona:', data.zone_name);
+            if (!zoneName) return;
+
+            var score = prompt('Edit skor kenyamanan 0-5:', data.score);
+            var comfortLevel = getCategoryFromScore(score);
+            var description = prompt('Edit deskripsi:', data.description);
+
+            fetch('/api/zones/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        zone_name: zoneName,
+                        score: score,
+                        comfort_level: comfortLevel,
+                        description: description
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function deleteZone(id) {
+            if (!confirm('Yakin ingin menghapus zona kenyamanan ini?')) return;
+
+            fetch('/api/zones/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function startEditRouteGeometry(id) {
+            var data = routeCache[id];
+
+            geometryEditMode = {
+                type: 'route',
+                id: id,
+                data: data
+            };
+
+            alert('Gambar ulang jalur pedestrian menggunakan ikon garis/polyline pada toolbar peta.');
+        }
+
+        function startEditZoneGeometry(id) {
+            var data = zoneCache[id];
+
+            geometryEditMode = {
+                type: 'zone',
+                id: id,
+                data: data
+            };
+
+            alert('Gambar ulang zona kenyamanan menggunakan ikon polygon pada toolbar peta.');
+        }
+        ma
     </script>
 
 </body>

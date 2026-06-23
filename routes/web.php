@@ -297,3 +297,91 @@ Route::post('/api/zones', function (Request $request) {
         'message' => 'Zona kenyamanan berhasil ditambahkan'
     ]);
 });
+
+Route::put('/api/routes/{id}', function (Request $request, $id) {
+    if ($request->filled('wkt')) {
+        DB::update("
+            UPDATE pedestrian_routes
+            SET route_name = ?, score = ?, category = ?, description = ?,
+                geom = ST_SetSRID(ST_GeomFromText(?), 4326)
+            WHERE id = ?
+        ", [
+            $request->route_name,
+            $request->score,
+            $request->category,
+            $request->description,
+            $request->wkt,
+            $id
+        ]);
+    } else {
+        DB::update("
+            UPDATE pedestrian_routes
+            SET route_name = ?, score = ?, category = ?, description = ?
+            WHERE id = ?
+        ", [
+            $request->route_name,
+            $request->score,
+            $request->category,
+            $request->description,
+            $id
+        ]);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Jalur pedestrian berhasil diperbarui'
+    ]);
+});
+
+Route::delete('/api/routes/{id}', function ($id) {
+    DB::delete("DELETE FROM pedestrian_routes WHERE id = ?", [$id]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Jalur pedestrian berhasil dihapus'
+    ]);
+});
+
+Route::put('/api/zones/{id}', function (Request $request, $id) {
+    if ($request->filled('wkt')) {
+        DB::update("
+            UPDATE comfort_zones
+            SET zone_name = ?, comfort_level = ?, score = ?, description = ?,
+                geom = ST_SetSRID(ST_GeomFromText(?), 4326)
+            WHERE id = ?
+        ", [
+            $request->zone_name,
+            $request->comfort_level,
+            $request->score,
+            $request->description,
+            $request->wkt,
+            $id
+        ]);
+    } else {
+        DB::update("
+            UPDATE comfort_zones
+            SET zone_name = ?, comfort_level = ?, score = ?, description = ?
+            WHERE id = ?
+        ", [
+            $request->zone_name,
+            $request->comfort_level,
+            $request->score,
+            $request->description,
+            $id
+        ]);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Zona kenyamanan berhasil diperbarui'
+    ]);
+});
+
+Route::delete('/api/zones/{id}', function ($id) {
+    DB::delete("DELETE FROM comfort_zones WHERE id = ?", [$id]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Zona kenyamanan berhasil dihapus'
+    ]);
+});
