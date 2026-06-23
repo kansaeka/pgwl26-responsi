@@ -38,7 +38,6 @@ Route::get('/api/facilities', function () {
         'type' => 'FeatureCollection',
         'features' => $features
     ]);
-
 });
 
 Route::get('/api/obstacles', function () {
@@ -149,11 +148,23 @@ Route::get('/api/statistics', function () {
     $routes = DB::table('pedestrian_routes')->count();
     $zones = DB::table('comfort_zones')->count();
 
+    $routeLength = DB::selectOne("
+        SELECT COALESCE(SUM(ST_Length(geom::geography)), 0) AS total_length
+        FROM pedestrian_routes
+    ");
+
+    $zoneArea = DB::selectOne("
+        SELECT COALESCE(SUM(ST_Area(geom::geography)), 0) AS total_area
+        FROM comfort_zones
+    ");
+
     return response()->json([
         'facilities' => $facilities,
         'obstacles' => $obstacles,
         'routes' => $routes,
-        'zones' => $zones
+        'zones' => $zones,
+        'route_length' => round($routeLength->total_length, 2),
+        'zone_area' => round($zoneArea->total_area, 2)
     ]);
 });
 
@@ -248,5 +259,3 @@ Route::delete('/api/obstacles/{id}', function ($id) {
         'message' => 'Hambatan berhasil dihapus'
     ]);
 });
-
-

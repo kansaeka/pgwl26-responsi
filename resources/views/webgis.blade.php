@@ -147,6 +147,48 @@
             margin: 4px 0 0;
             font-size: 12px;
         }
+
+        .filter-box {
+            position: absolute;
+            top: 260px;
+            left: 60px;
+            z-index: 1000;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            font-size: 13px;
+            width: 220px;
+        }
+
+        .filter-box h4 {
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+
+        .filter-box label {
+            display: block;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .filter-box select {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 6px;
+        }
+
+        .filter-box button {
+            width: 100%;
+            padding: 6px;
+            margin-top: 8px;
+            border: none;
+            background: #1d4ed8;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -165,6 +207,30 @@
             <option value="obstacle">Hambatan Pedestrian</option>
         </select>
         <p>Klik ikon marker pada toolbar peta, lalu letakkan titik.</p>
+    </div>
+
+    <div class="filter-box">
+        <h4>Filter Data</h4>
+
+        <label>Fasilitas Kampus</label>
+        <select id="facilityFilter" onchange="applyFilters()">
+            <option value="all">Semua Fasilitas</option>
+            <option value="Gedung publik">Gedung Publik</option>
+            <option value="Fasilitas akademik">Fasilitas Akademik</option>
+            <option value="Fasilitas ibadah">Fasilitas Ibadah</option>
+            <option value="Fakultas">Fakultas</option>
+            <option value="Ruang terbuka">Ruang Terbuka</option>
+        </select>
+
+        <label>Hambatan Pedestrian</label>
+        <select id="obstacleFilter" onchange="applyFilters()">
+            <option value="all">Semua Hambatan</option>
+            <option value="Ringan">Ringan</option>
+            <option value="Sedang">Sedang</option>
+            <option value="Tinggi">Tinggi</option>
+        </select>
+
+        <button onclick="resetFilters()">Reset Filter</button>
     </div>
 
     <!-- HTML: div utama peta -->
@@ -191,11 +257,14 @@
     </div>
 
     <div class="stats-box">
-        <h4>Statistik</h4>
-        <p>Fasilitas Kampus: <span id="totalFacilities">0</span></p>
-        <p>Hambatan Pedestrian: <span id="totalObstacles">0</span></p>
-        <p>Jalur Pedestrian: <span id="totalRoutes">0</span></p>
-        <p>Zona Kenyamanan: <span id="totalZones">0</span></p>
+        <h4>Statistik WebGIS</h4>
+        <p>Fasilitas: <span id="totalFacilities">0</span></p>
+        <p>Hambatan: <span id="totalObstacles">0</span></p>
+        <p>Jalur: <span id="totalRoutes">0</span></p>
+        <p>Zona: <span id="totalZones">0</span></p>
+        <hr>
+        <p>Panjang Jalur: <span id="totalLength">0</span> m</p>
+        <p>Luas Zona: <span id="totalArea">0</span> m²</p>
     </div>
 
     <!-- Leaflet JS ditaruh sebelum script peta -->
@@ -239,61 +308,79 @@
         }
 
         // 6. Layer fasilitas kampus
-        fetch('/api/facilities')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    pointToLayer: function(feature, latlng) {
-                        return L.circleMarker(latlng, {
-                            radius: 7,
-                            color: '#1d4ed8',
-                            fillColor: '#3b82f6',
-                            fillOpacity: 0.8,
-                            weight: 1
-                        });
-                    },
-                    onEachFeature: function(feature, layer) {
-                        facilityCache[feature.properties.id] = feature.properties;
+        function loadFacilities(filterCategory = 'all') {
+            facilitiesLayer.clearLayers();
+            facilityCache = {};
 
-                        layer.bindPopup(`
-                            <b>${feature.properties.name}</b><br>
-                            Kategori: ${feature.properties.category}<br>
-                            ${feature.properties.description}<br><br>
-                            <button onclick="editFacility(${feature.properties.id})">Edit</button>
-                            <button onclick="deleteFacility(${feature.properties.id})">Hapus</button>
-                         `);
-                    }
-                }).addTo(facilitiesLayer);
-            });
+            fetch('/api/facilities')
+                .then(response => response.json())
+                .then(data => {
+                    L.geoJSON(data, {
+                        filter: function(feature) {
+                            if (filterCategory === 'all') return true;
+                            return feature.properties.category === filterCategory;
+                        },
+                        pointToLayer: function(feature, latlng) {
+                            return L.circleMarker(latlng, {
+                                radius: 7,
+                                color: '#1d4ed8',
+                                fillColor: '#3b82f6',
+                                fillOpacity: 0.8,
+                                weight: 1
+                            });
+                        },
+                        onEachFeature: function(feature, layer) {
+                            facilityCache[feature.properties.id] = feature.properties;
+
+                            layer.bindPopup(`
+                        <b>${feature.properties.name}</b><br>
+                        Kategori: ${feature.properties.category}<br>
+                        ${feature.properties.description}<br><br>
+                        <button onclick="editFacility(${feature.properties.id})">Edit</button>
+                        <button onclick="deleteFacility(${feature.properties.id})">Hapus</button>
+                    `);
+                        }
+                    }).addTo(facilitiesLayer);
+                });
+        }
 
         // 7. Layer hambatan pedestrian
-        fetch('/api/obstacles')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    pointToLayer: function(feature, latlng) {
-                        return L.circleMarker(latlng, {
-                            radius: 7,
-                            color: '#991b1b',
-                            fillColor: '#ef4444',
-                            fillOpacity: 0.9,
-                            weight: 1
-                        });
-                    },
-                    onEachFeature: function(feature, layer) {
-                        obstacleCache[feature.properties.id] = feature.properties;
+        function loadObstacles(filterSeverity = 'all') {
+            obstaclesLayer.clearLayers();
+            obstacleCache = {};
 
-                        layer.bindPopup(`
-                            <b>${feature.properties.name}</b><br>
-                            Jenis: ${feature.properties.obstacle_type}<br>
-                            Tingkat: ${feature.properties.severity}<br>
-                            ${feature.properties.description}<br><br>
-                            <button onclick="editObstacle(${feature.properties.id})">Edit</button>
-                            <button onclick="deleteObstacle(${feature.properties.id})">Hapus</button>
-    `);
-                    }
-                }).addTo(obstaclesLayer);
-            });
+            fetch('/api/obstacles')
+                .then(response => response.json())
+                .then(data => {
+                    L.geoJSON(data, {
+                        filter: function(feature) {
+                            if (filterSeverity === 'all') return true;
+                            return feature.properties.severity === filterSeverity;
+                        },
+                        pointToLayer: function(feature, latlng) {
+                            return L.circleMarker(latlng, {
+                                radius: 7,
+                                color: '#991b1b',
+                                fillColor: '#ef4444',
+                                fillOpacity: 0.9,
+                                weight: 1
+                            });
+                        },
+                        onEachFeature: function(feature, layer) {
+                            obstacleCache[feature.properties.id] = feature.properties;
+
+                            layer.bindPopup(`
+                        <b>${feature.properties.name}</b><br>
+                        Jenis: ${feature.properties.obstacle_type}<br>
+                        Tingkat: ${feature.properties.severity}<br>
+                        ${feature.properties.description}<br><br>
+                        <button onclick="editObstacle(${feature.properties.id})">Edit</button>
+                        <button onclick="deleteObstacle(${feature.properties.id})">Hapus</button>
+                    `);
+                        }
+                    }).addTo(obstaclesLayer);
+                });
+        }
 
         // 8. Layer jalur pedestrian
         fetch('/api/routes')
@@ -436,14 +523,20 @@
         });
 
         // 11. Statistik
-        fetch('/api/statistics')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('totalFacilities').textContent = data.facilities;
-                document.getElementById('totalObstacles').textContent = data.obstacles;
-                document.getElementById('totalRoutes').textContent = data.routes;
-                document.getElementById('totalZones').textContent = data.zones;
-            });
+        function loadStatistics() {
+            fetch('/api/statistics')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalFacilities').textContent = data.facilities;
+                    document.getElementById('totalObstacles').textContent = data.obstacles;
+                    document.getElementById('totalRoutes').textContent = data.routes;
+                    document.getElementById('totalZones').textContent = data.zones;
+                    document.getElementById('totalLength').textContent = data.route_length;
+                    document.getElementById('totalArea').textContent = data.zone_area;
+                });
+        }
+
+        loadStatistics();
 
         // 12. Fungsi edit dan hapus fasilitas
         function editFacility(id) {
@@ -535,6 +628,25 @@
                     location.reload();
                 });
         }
+
+        function applyFilters() {
+            var facilityValue = document.getElementById('facilityFilter').value;
+            var obstacleValue = document.getElementById('obstacleFilter').value;
+
+            loadFacilities(facilityValue);
+            loadObstacles(obstacleValue);
+        }
+
+        function resetFilters() {
+            document.getElementById('facilityFilter').value = 'all';
+            document.getElementById('obstacleFilter').value = 'all';
+
+            loadFacilities();
+            loadObstacles();
+        }
+
+        loadFacilities();
+        loadObstacles();
     </script>
 
 </body>
