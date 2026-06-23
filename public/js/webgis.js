@@ -70,9 +70,12 @@ function loadFacilities(filterCategory = 'all') {
                     layer.bindPopup(`
                         <b>${feature.properties.name}</b><br>
                         Kategori: ${feature.properties.category}<br>
-                        ${feature.properties.description}<br><br>
+                        ${feature.properties.description}<br>
+                        ${feature.properties.image_path ? `<br><img src="/${feature.properties.image_path}" width="190" style="margin-top:8px;border-radius:6px;">` : ''}
+                        <br><br>
                         <button onclick="editFacility(${feature.properties.id})">Edit</button>
                         <button onclick="deleteFacility(${feature.properties.id})">Hapus</button>
+                        <button onclick="window.location.href='/facilities/${feature.properties.id}/image'">Upload Gambar</button>
                     `);
 
                     // Tambahkan ke indeks pencarian
@@ -115,12 +118,22 @@ function loadObstacles(filterSeverity = 'all') {
                     layer.bindPopup(`
                         <b>${feature.properties.name}</b><br>
                         Jenis: ${feature.properties.obstacle_type}<br>
-                        Tingkat: ${feature.properties.severity}<br><br>
-                        <b>Keterangan dan Rekomendasi:</b><br>
+                        Tingkat: ${feature.properties.severity}<br>
+                        Prioritas Perbaikan: ${feature.properties.priority_level ?? '-'}<br><br>
+
+                        <b>Keterangan:</b><br>
                         ${feature.properties.description}<br><br>
+
+                        <b>Rekomendasi:</b><br>
+                        ${feature.properties.recommendation ?? '-'}<br>
+
+                        ${feature.properties.image_path ? `<br><img src="/${feature.properties.image_path}" width="190" style="margin-top:8px;border-radius:6px;">` : ''}
+
+                        <br><br>
                         <button onclick="editObstacle(${feature.properties.id})">Edit</button>
                         <button onclick="deleteObstacle(${feature.properties.id})">Hapus</button>
-                    `);
+                        <button onclick="window.location.href='/obstacles/${feature.properties.id}/image'">Upload Gambar</button>
+                `);
                 }
             }).addTo(obstaclesLayer);
         });
@@ -152,13 +165,16 @@ function loadRoutes(filterCategory = 'all') {
                     layer.bindPopup(`
                         <b>${feature.properties.route_name}</b><br>
                         Kategori: ${feature.properties.category}<br>
-                        Skor: ${feature.properties.score}<br><br>
-                        <b>Keterangan dan Rekomendasi:</b><br>
+                        Skor: ${feature.properties.score}<br>
+                        Prioritas Perbaikan: ${feature.properties.priority_level ?? '-'}<br><br>
+                        <b>Keterangan:</b><br>
                         ${feature.properties.description}<br><br>
+                        <b>Rekomendasi:</b><br>
+                        ${feature.properties.recommendation ?? '-'}<br><br>
                         <button onclick="editRouteAttribute(${feature.properties.id})">Edit Atribut</button>
                         <button onclick="startEditRouteGeometry(${feature.properties.id})">Edit Bentuk</button>
                         <button onclick="deleteRoute(${feature.properties.id})">Hapus</button>
-                    `);
+            `);
                 }
             }).addTo(routesLayer);
         });
@@ -268,7 +284,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
     if (geometryEditMode !== null) {
         if (geometryEditMode.type === 'route') {
             if (layerType !== 'polyline') {
-                alert('Untuk mengedit bentuk jalur, gunakan garis/polyline.');
+                showToast('Gambar ulang jalur pedestrian menggunakan ikon garis/polyline pada toolbar peta.');
                 return;
             }
 
@@ -293,8 +309,10 @@ map.on(L.Draw.Event.CREATED, function (event) {
                 .then(response => response.json())
                 .then(data => {
                     geometryEditMode = null;
-                    alert(data.message);
-                    location.reload();
+                    showToast(data.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1200);
                 });
 
             return;
@@ -302,7 +320,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
 
         if (geometryEditMode.type === 'zone') {
             if (layerType !== 'polygon') {
-                alert('Untuk mengedit bentuk zona, gunakan polygon/area.');
+                showToast('Untuk mengedit bentuk zona, gunakan polygon/area.');
                 return;
             }
 
@@ -327,8 +345,10 @@ map.on(L.Draw.Event.CREATED, function (event) {
                 .then(response => response.json())
                 .then(data => {
                     geometryEditMode = null;
-                    alert(data.message);
-                    location.reload();
+                    showToast(data.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1200);
                 });
 
             return;
@@ -338,7 +358,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
     // Tambah fasilitas kampus
     if (drawType === 'facility') {
         if (layerType !== 'marker') {
-            alert('Untuk fasilitas kampus, gunakan marker/titik.');
+            showToast('Untuk fasilitas kampus, gunakan marker/titik.');
             return;
         }
 
@@ -367,15 +387,17 @@ map.on(L.Draw.Event.CREATED, function (event) {
         })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                location.reload();
+                showToast(data.message);
+                setTimeout(function () {
+                    location.reload();
+                }, 1200);
             });
     }
 
     // Tambah hambatan pedestrian
     if (drawType === 'obstacle') {
         if (layerType !== 'marker') {
-            alert('Untuk hambatan pedestrian, gunakan marker/titik.');
+            showToast('Untuk hambatan pedestrian, gunakan marker/titik.');
             return;
         }
 
@@ -406,15 +428,17 @@ map.on(L.Draw.Event.CREATED, function (event) {
         })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                location.reload();
+                showToast(data.message);
+                setTimeout(function () {
+                    location.reload();
+                }, 1200);
             });
     }
 
     // Tambah jalur pedestrian
     if (drawType === 'route') {
         if (layerType !== 'polyline') {
-            alert('Untuk jalur pedestrian, gunakan garis/polyline.');
+            showToast('Untuk jalur pedestrian, gunakan garis/polyline.');
             return;
         }
 
@@ -446,15 +470,17 @@ map.on(L.Draw.Event.CREATED, function (event) {
         })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                location.reload();
+                showToast(data.message);
+                setTimeout(function () {
+                    location.reload();
+                }, 1200);
             });
     }
 
     // Tambah zona kenyamanan
     if (drawType === 'zone') {
         if (layerType !== 'polygon') {
-            alert('Untuk zona kenyamanan, gunakan polygon/area.');
+            showToast('Untuk zona kenyamanan, gunakan polygon/area.');
             return;
         }
 
@@ -486,8 +512,10 @@ map.on(L.Draw.Event.CREATED, function (event) {
         })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                location.reload();
+                showToast(data.message);
+                setTimeout(function () {
+                    location.reload();
+                }, 1200);
             });
     }
 });
@@ -532,8 +560,10 @@ function editFacility(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -548,8 +578,10 @@ function deleteFacility(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -580,8 +612,10 @@ function editObstacle(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -596,8 +630,10 @@ function deleteObstacle(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -653,8 +689,10 @@ function editRouteAttribute(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -670,8 +708,10 @@ function deleteRoute(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -701,8 +741,10 @@ function editZoneAttribute(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -718,8 +760,10 @@ function deleteZone(id) {
     })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showToast(data.message);
+            setTimeout(function () {
+                location.reload();
+            }, 1200);
         });
 }
 
@@ -732,7 +776,7 @@ function startEditRouteGeometry(id) {
         data: data
     };
 
-    alert('Gambar ulang jalur pedestrian menggunakan ikon garis/polyline pada toolbar peta.');
+    showToast('Gambar ulang jalur pedestrian menggunakan ikon garis/polyline pada toolbar peta.');
 }
 
 function startEditZoneGeometry(id) {
@@ -744,14 +788,14 @@ function startEditZoneGeometry(id) {
         data: data
     };
 
-    alert('Gambar ulang zona kenyamanan menggunakan ikon polygon pada toolbar peta.');
+    showToast('Gambar ulang zona kenyamanan menggunakan ikon polygon pada toolbar peta.');
 }
 
 function searchFacility() {
     var keyword = document.getElementById('searchInput').value.toLowerCase().trim();
 
     if (keyword === '') {
-        alert('Masukkan nama fasilitas yang ingin dicari.');
+        showToast('Masukkan nama fasilitas yang ingin dicari.');
         return;
     }
 
@@ -760,7 +804,7 @@ function searchFacility() {
     });
 
     if (!result) {
-        alert('Fasilitas tidak ditemukan pada layer yang sedang tampil.');
+        showToast('Fasilitas tidak ditemukan pada layer yang sedang tampil.');
         return;
     }
 
@@ -779,3 +823,15 @@ document.getElementById('searchInput').addEventListener('keypress', function (ev
         searchFacility();
     }
 });
+
+function showToast(message) {
+    var toast = document.getElementById('toast');
+    var toastMessage = document.getElementById('toastMessage');
+
+    toastMessage.textContent = message;
+    toast.style.display = 'block';
+
+    setTimeout(function () {
+        toast.style.display = 'none';
+    }, 2500);
+}

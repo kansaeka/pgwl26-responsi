@@ -15,6 +15,7 @@ Route::get('/api/facilities', function () {
             name,
             category,
             description,
+            image_path,
             ST_AsGeoJSON(geom) AS geometry
         FROM facilities
     ");
@@ -29,7 +30,8 @@ Route::get('/api/facilities', function () {
                 'id' => $row->id,
                 'name' => $row->name,
                 'category' => $row->category,
-                'description' => $row->description
+                'description' => $row->description,
+                'image_path' => $row->image_path
             ]
         ];
     }
@@ -48,6 +50,9 @@ Route::get('/api/obstacles', function () {
             obstacle_type,
             severity,
             description,
+            priority_level,
+            recommendation,
+            image_path,
             ST_AsGeoJSON(geom) AS geometry
         FROM pedestrian_obstacles
     ");
@@ -63,7 +68,10 @@ Route::get('/api/obstacles', function () {
                 'name' => $row->name,
                 'obstacle_type' => $row->obstacle_type,
                 'severity' => $row->severity,
-                'description' => $row->description
+                'description' => $row->description,
+                'priority_level' => $row->priority_level,
+                'recommendation' => $row->recommendation,
+                'image_path' => $row->image_path
             ]
         ];
     }
@@ -82,6 +90,8 @@ Route::get('/api/routes', function () {
             score,
             category,
             description,
+            priority_level,
+            recommendation,
             ST_AsGeoJSON(geom) AS geometry
         FROM pedestrian_routes
     ");
@@ -97,7 +107,9 @@ Route::get('/api/routes', function () {
                 'route_name' => $row->route_name,
                 'score' => $row->score,
                 'category' => $row->category,
-                'description' => $row->description
+                'description' => $row->description,
+                'priority_level' => $row->priority_level,
+                'recommendation' => $row->recommendation
             ]
         ];
     }
@@ -384,4 +396,76 @@ Route::delete('/api/zones/{id}', function ($id) {
         'status' => 'success',
         'message' => 'Zona kenyamanan berhasil dihapus'
     ]);
+});
+
+Route::get('/facilities/{id}/image', function ($id) {
+    $data = DB::table('facilities')->where('id', $id)->first();
+
+    if (!$data) {
+        abort(404);
+    }
+
+    return view('upload-image', [
+        'type' => 'facility',
+        'title' => 'Upload Gambar Fasilitas Kampus',
+        'data' => $data,
+        'action' => url('/facilities/' . $id . '/image')
+    ]);
+});
+
+Route::post('/facilities/{id}/image', function (Request $request, $id) {
+    $request->validate([
+        'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048'
+    ]);
+
+    $file = $request->file('image');
+    $filename = 'facility_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+    $file->move(public_path('images/facilities'), $filename);
+
+    $imagePath = 'images/facilities/' . $filename;
+
+    DB::table('facilities')
+        ->where('id', $id)
+        ->update([
+            'image_path' => $imagePath
+        ]);
+
+    return redirect('/')->with('success', 'Gambar fasilitas berhasil diunggah.');
+});
+
+Route::get('/obstacles/{id}/image', function ($id) {
+    $data = DB::table('pedestrian_obstacles')->where('id', $id)->first();
+
+    if (!$data) {
+        abort(404);
+    }
+
+    return view('upload-image', [
+        'type' => 'obstacle',
+        'title' => 'Upload Gambar Hambatan Pedestrian',
+        'data' => $data,
+        'action' => url('/obstacles/' . $id . '/image')
+    ]);
+});
+
+Route::post('/obstacles/{id}/image', function (Request $request, $id) {
+    $request->validate([
+        'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048'
+    ]);
+
+    $file = $request->file('image');
+    $filename = 'obstacle_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+    $file->move(public_path('images/obstacles'), $filename);
+
+    $imagePath = 'images/obstacles/' . $filename;
+
+    DB::table('pedestrian_obstacles')
+        ->where('id', $id)
+        ->update([
+            'image_path' => $imagePath
+        ]);
+
+    return redirect('/')->with('success', 'Gambar hambatan berhasil diunggah.');
 });

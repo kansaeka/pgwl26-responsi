@@ -71,6 +71,11 @@
         <button onclick="resetView()">Reset View</button>
     </div>
 
+    <div id="toast" class="toast-box">
+        <strong>WalkTheTalk</strong>
+        <p id="toastMessage">Pesan berhasil ditampilkan.</p>
+    </div>
+
     <!-- HTML: div utama peta -->
     <div id="map"></div>
 
