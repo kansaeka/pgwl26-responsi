@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('webgis');
 });
-
-use Illuminate\Support\Facades\DB;
 
 Route::get('/api/facilities', function () {
     $data = DB::select("
@@ -156,3 +156,97 @@ Route::get('/api/statistics', function () {
         'zones' => $zones
     ]);
 });
+
+Route::post('/api/facilities', function (Request $request) {
+    DB::insert("
+        INSERT INTO facilities (name, category, description, geom)
+        VALUES (?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326))
+    ", [
+        $request->name,
+        $request->category,
+        $request->description,
+        $request->lng,
+        $request->lat
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Fasilitas berhasil ditambahkan'
+    ]);
+});
+
+Route::put('/api/facilities/{id}', function (Request $request, $id) {
+    DB::update("
+        UPDATE facilities
+        SET name = ?, category = ?, description = ?
+        WHERE id = ?
+    ", [
+        $request->name,
+        $request->category,
+        $request->description,
+        $id
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Fasilitas berhasil diperbarui'
+    ]);
+});
+
+Route::delete('/api/facilities/{id}', function ($id) {
+    DB::delete("DELETE FROM facilities WHERE id = ?", [$id]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Fasilitas berhasil dihapus'
+    ]);
+});
+
+Route::post('/api/obstacles', function (Request $request) {
+    DB::insert("
+        INSERT INTO pedestrian_obstacles (name, obstacle_type, severity, description, geom)
+        VALUES (?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326))
+    ", [
+        $request->name,
+        $request->obstacle_type,
+        $request->severity,
+        $request->description,
+        $request->lng,
+        $request->lat
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Hambatan berhasil ditambahkan'
+    ]);
+});
+
+Route::put('/api/obstacles/{id}', function (Request $request, $id) {
+    DB::update("
+        UPDATE pedestrian_obstacles
+        SET name = ?, obstacle_type = ?, severity = ?, description = ?
+        WHERE id = ?
+    ", [
+        $request->name,
+        $request->obstacle_type,
+        $request->severity,
+        $request->description,
+        $id
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Hambatan berhasil diperbarui'
+    ]);
+});
+
+Route::delete('/api/obstacles/{id}', function ($id) {
+    DB::delete("DELETE FROM pedestrian_obstacles WHERE id = ?", [$id]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Hambatan berhasil dihapus'
+    ]);
+});
+
+

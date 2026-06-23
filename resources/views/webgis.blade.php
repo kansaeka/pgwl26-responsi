@@ -7,6 +7,8 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- CSS ditaruh di bagian head -->
     <style>
@@ -116,6 +118,35 @@
         .stats-box p {
             margin: 4px 0;
         }
+
+        .crud-box {
+            position: absolute;
+            top: 105px;
+            left: 60px;
+            z-index: 1000;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            font-size: 13px;
+            width: 220px;
+        }
+
+        .crud-box h4 {
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+
+        .crud-box select {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 6px;
+        }
+
+        .crud-box p {
+            margin: 4px 0 0;
+            font-size: 12px;
+        }
     </style>
 </head>
 
@@ -125,6 +156,15 @@
     <div class="title-box">
         <h3>Walk the Talk</h3>
         <p>WebGIS Evaluasi Walkability Kawasan UGM</p>
+    </div>
+
+    <div class="crud-box">
+        <h4>Tambah Data</h4>
+        <select id="drawType">
+            <option value="facility">Fasilitas Kampus</option>
+            <option value="obstacle">Hambatan Pedestrian</option>
+        </select>
+        <p>Klik ikon marker pada toolbar peta, lalu letakkan titik.</p>
     </div>
 
     <!-- HTML: div utama peta -->
@@ -160,6 +200,7 @@
 
     <!-- Leaflet JS ditaruh sebelum script peta -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
 
     <!-- JS utama peta ditaruh sebelum penutup body -->
     <script>
@@ -177,6 +218,11 @@
         var obstaclesLayer = L.layerGroup().addTo(map);
         var routesLayer = L.layerGroup().addTo(map);
         var zonesLayer = L.layerGroup().addTo(map);
+
+        var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        var facilityCache = {};
+        var obstacleCache = {};
 
         // 4. Fungsi warna jalur
         function routeColor(category) {
@@ -207,11 +253,15 @@
                         });
                     },
                     onEachFeature: function(feature, layer) {
+                        facilityCache[feature.properties.id] = feature.properties;
+
                         layer.bindPopup(`
                             <b>${feature.properties.name}</b><br>
                             Kategori: ${feature.properties.category}<br>
-                            ${feature.properties.description}
-                        `);
+                            ${feature.properties.description}<br><br>
+                            <button onclick="editFacility(${feature.properties.id})">Edit</button>
+                            <button onclick="deleteFacility(${feature.properties.id})">Hapus</button>
+                         `);
                     }
                 }).addTo(facilitiesLayer);
             });
@@ -231,12 +281,16 @@
                         });
                     },
                     onEachFeature: function(feature, layer) {
+                        obstacleCache[feature.properties.id] = feature.properties;
+
                         layer.bindPopup(`
                             <b>${feature.properties.name}</b><br>
                             Jenis: ${feature.properties.obstacle_type}<br>
                             Tingkat: ${feature.properties.severity}<br>
-                            ${feature.properties.description}
-                        `);
+                            ${feature.properties.description}<br><br>
+                            <button onclick="editObstacle(${feature.properties.id})">Edit</button>
+                            <button onclick="deleteObstacle(${feature.properties.id})">Hapus</button>
+    `);
                     }
                 }).addTo(obstaclesLayer);
             });
@@ -300,6 +354,87 @@
             collapsed: false
         }).addTo(map);
 
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            draw: {
+                marker: true,
+                polyline: false,
+                polygon: false,
+                rectangle: false,
+                circle: false,
+                circlemarker: false
+            },
+            edit: false
+        });
+
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function(event) {
+            var layer = event.layer;
+            var latlng = layer.getLatLng();
+            var drawType = document.getElementById('drawType').value;
+
+            if (drawType === 'facility') {
+                var name = prompt('Nama fasilitas:');
+                if (!name) return;
+
+                var category = prompt('Kategori fasilitas:', 'Fasilitas Kampus');
+                var description = prompt('Deskripsi:', 'Fasilitas pendukung aktivitas kawasan UGM');
+
+                fetch('/api/facilities', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            category: category,
+                            description: description,
+                            lat: latlng.lat,
+                            lng: latlng.lng
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        location.reload();
+                    });
+            }
+
+            if (drawType === 'obstacle') {
+                var name = prompt('Nama hambatan:');
+                if (!name) return;
+
+                var obstacleType = prompt('Jenis hambatan:', 'Hambatan Pedestrian');
+                var severity = prompt('Tingkat hambatan:', 'Sedang');
+                var description = prompt('Deskripsi:', 'Titik hambatan pergerakan pejalan kaki');
+
+                fetch('/api/obstacles', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            obstacle_type: obstacleType,
+                            severity: severity,
+                            description: description,
+                            lat: latlng.lat,
+                            lng: latlng.lng
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        location.reload();
+                    });
+            }
+        });
+
         // 11. Statistik
         fetch('/api/statistics')
             .then(response => response.json())
@@ -309,6 +444,97 @@
                 document.getElementById('totalRoutes').textContent = data.routes;
                 document.getElementById('totalZones').textContent = data.zones;
             });
+
+        // 12. Fungsi edit dan hapus fasilitas
+        function editFacility(id) {
+            var data = facilityCache[id];
+
+            var name = prompt('Edit nama fasilitas:', data.name);
+            if (!name) return;
+
+            var category = prompt('Edit kategori:', data.category);
+            var description = prompt('Edit deskripsi:', data.description);
+
+            fetch('/api/facilities/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        category: category,
+                        description: description
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function deleteFacility(id) {
+            if (!confirm('Yakin ingin menghapus fasilitas ini?')) return;
+
+            fetch('/api/facilities/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function editObstacle(id) {
+            var data = obstacleCache[id];
+
+            var name = prompt('Edit nama hambatan:', data.name);
+            if (!name) return;
+
+            var obstacleType = prompt('Edit jenis hambatan:', data.obstacle_type);
+            var severity = prompt('Edit tingkat hambatan:', data.severity);
+            var description = prompt('Edit deskripsi:', data.description);
+
+            fetch('/api/obstacles/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        obstacle_type: obstacleType,
+                        severity: severity,
+                        description: description
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
+
+        function deleteObstacle(id) {
+            if (!confirm('Yakin ingin menghapus hambatan ini?')) return;
+
+            fetch('/api/obstacles/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                });
+        }
     </script>
 
 </body>
