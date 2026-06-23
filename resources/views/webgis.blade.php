@@ -205,8 +205,10 @@
         <select id="drawType">
             <option value="facility">Fasilitas Kampus</option>
             <option value="obstacle">Hambatan Pedestrian</option>
+            <option value="route">Jalur Pedestrian</option>
+            <option value="zone">Zona Kenyamanan</option>
         </select>
-        <p>Klik ikon marker pada toolbar peta, lalu letakkan titik.</p>
+        <p>Pilih jenis data, lalu gunakan marker, garis, atau polygon pada toolbar peta.</p>
     </div>
 
     <div class="filter-box">
@@ -447,8 +449,8 @@
         var drawControl = new L.Control.Draw({
             draw: {
                 marker: true,
-                polyline: false,
-                polygon: false,
+                polyline: true,
+                polygon: true,
                 rectangle: false,
                 circle: false,
                 circlemarker: false
@@ -458,12 +460,51 @@
 
         map.addControl(drawControl);
 
+        function getCategoryFromScore(score) {
+            score = parseInt(score);
+
+            if (score >= 4) return 'Nyaman';
+            if (score >= 2) return 'Cukup nyaman';
+            return 'Kurang nyaman';
+        }
+
+        function polylineToWKT(layer) {
+            var latlngs = layer.getLatLngs();
+
+            var coordinates = latlngs.map(function(latlng) {
+                return latlng.lng + ' ' + latlng.lat;
+            }).join(', ');
+
+            return 'LINESTRING(' + coordinates + ')';
+        }
+
+        function polygonToWKT(layer) {
+            var latlngs = layer.getLatLngs()[0];
+
+            var coordinates = latlngs.map(function(latlng) {
+                return latlng.lng + ' ' + latlng.lat;
+            });
+
+            // tutup polygon dengan koordinat pertama
+            coordinates.push(latlngs[0].lng + ' ' + latlngs[0].lat);
+
+            return 'POLYGON((' + coordinates.join(', ') + '))';
+        }
+
         map.on(L.Draw.Event.CREATED, function(event) {
             var layer = event.layer;
-            var latlng = layer.getLatLng();
+            var layerType = event.layerType;
             var drawType = document.getElementById('drawType').value;
 
+            // Tambah fasilitas kampus
             if (drawType === 'facility') {
+                if (layerType !== 'marker') {
+                    alert('Untuk fasilitas kampus, gunakan marker/titik.');
+                    return;
+                }
+
+                var latlng = layer.getLatLng();
+
                 var name = prompt('Nama fasilitas:');
                 if (!name) return;
 
@@ -474,6 +515,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Accept': 'application/json',
                             'X-CSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify({
@@ -491,7 +533,15 @@
                     });
             }
 
+            // Tambah hambatan pedestrian
             if (drawType === 'obstacle') {
+                if (layerType !== 'marker') {
+                    alert('Untuk hambatan pedestrian, gunakan marker/titik.');
+                    return;
+                }
+
+                var latlng = layer.getLatLng();
+
                 var name = prompt('Nama hambatan:');
                 if (!name) return;
 
@@ -503,6 +553,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Accept': 'application/json',
                             'X-CSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify({
@@ -512,6 +563,80 @@
                             description: description,
                             lat: latlng.lat,
                             lng: latlng.lng
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        location.reload();
+                    });
+            }
+
+            // Tambah jalur pedestrian
+            if (drawType === 'route') {
+                if (layerType !== 'polyline') {
+                    alert('Untuk jalur pedestrian, gunakan garis/polyline.');
+                    return;
+                }
+
+                var routeName = prompt('Nama jalur pedestrian:');
+                if (!routeName) return;
+
+                var score = prompt('Skor walkability 0-5:', '3');
+                var category = getCategoryFromScore(score);
+                var description = prompt('Deskripsi:', 'Jalur pedestrian kawasan UGM');
+                var wkt = polylineToWKT(layer);
+
+                fetch('/api/routes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            route_name: routeName,
+                            score: score,
+                            category: category,
+                            description: description,
+                            wkt: wkt
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        location.reload();
+                    });
+            }
+
+            // Tambah zona kenyamanan
+            if (drawType === 'zone') {
+                if (layerType !== 'polygon') {
+                    alert('Untuk zona kenyamanan, gunakan polygon/area.');
+                    return;
+                }
+
+                var zoneName = prompt('Nama zona kenyamanan:');
+                if (!zoneName) return;
+
+                var score = prompt('Skor kenyamanan 0-5:', '3');
+                var comfortLevel = getCategoryFromScore(score);
+                var description = prompt('Deskripsi:', 'Zona kenyamanan pedestrian kawasan UGM');
+                var wkt = polygonToWKT(layer);
+
+                fetch('/api/zones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            zone_name: zoneName,
+                            score: score,
+                            comfort_level: comfortLevel,
+                            description: description,
+                            wkt: wkt
                         })
                     })
                     .then(response => response.json())

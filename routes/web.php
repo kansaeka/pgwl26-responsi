@@ -259,3 +259,41 @@ Route::delete('/api/obstacles/{id}', function ($id) {
         'message' => 'Hambatan berhasil dihapus'
     ]);
 });
+
+Route::post('/api/routes', function (Request $request) {
+    DB::insert("
+        INSERT INTO pedestrian_routes
+        (route_name, score, category, description, geom)
+        VALUES (?, ?, ?, ?, ST_SetSRID(ST_GeomFromText(?), 4326))
+    ", [
+        $request->route_name,
+        $request->score,
+        $request->category,
+        $request->description,
+        $request->wkt
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Jalur pedestrian berhasil ditambahkan'
+    ]);
+});
+
+Route::post('/api/zones', function (Request $request) {
+    DB::insert("
+        INSERT INTO comfort_zones
+        (zone_name, comfort_level, score, description, geom)
+        VALUES (?, ?, ?, ?, ST_SetSRID(ST_GeomFromText(?), 4326))
+    ", [
+        $request->zone_name,
+        $request->comfort_level,
+        $request->score,
+        $request->description,
+        $request->wkt
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Zona kenyamanan berhasil ditambahkan'
+    ]);
+});
