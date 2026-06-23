@@ -97,6 +97,13 @@ body {
     margin-right: 8px;
 }
 
+.line-red {
+    width: 22px;
+    height: 4px;
+    background: red;
+    margin-right: 8px;
+}
+
 .polygon-box {
     width: 16px;
     height: 16px;

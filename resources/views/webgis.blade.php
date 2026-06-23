@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/webgis.css') }}">
 
 </head>
+
 <body>
 
     <!-- HTML: kotak judul -->
@@ -52,6 +53,14 @@
             <option value="Tinggi">Tinggi</option>
         </select>
 
+        <label>Jalur Pedestrian</label>
+        <select id="routeFilter" onchange="applyFilters()">
+            <option value="all">Semua Jalur</option>
+            <option value="Nyaman">Nyaman</option>
+            <option value="Cukup nyaman">Cukup Nyaman</option>
+            <option value="Kurang nyaman">Kurang Nyaman</option>
+        </select>
+
         <button onclick="resetFilters()">Reset Filter</button>
     </div>
 
@@ -79,6 +88,9 @@
         </div>
         <div class="legend-item">
             <span class="line-orange"></span> Jalur Cukup Nyaman
+        </div>
+        <div class="legend-item">
+            <span class="line-red"></span> Jalur Kurang Nyaman
         </div>
         <div class="legend-item">
             <span class="polygon-box"></span> Zona Kenyamanan
@@ -119,4 +131,5 @@
 
 
 </body>
+
 </html>
