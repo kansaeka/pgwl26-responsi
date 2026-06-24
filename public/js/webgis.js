@@ -623,8 +623,6 @@ function loadStatistics() {
         });
 }
 
-loadStatistics();
-
 // 12. Fungsi edit dan hapus fasilitas
 function editFacility(id) {
     var data = facilityCache[id];
