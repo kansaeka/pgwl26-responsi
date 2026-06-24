@@ -42,4 +42,13 @@ class ComfortZonePolygonController extends Controller
     {
         return response()->json(ComfortZonePolygon::deleteData($id));
     }
+
+    public function updateGeometry(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'wkt' => 'required|string',
+        ]);
+
+        return response()->json(ComfortZonePolygon::updateGeometry($id, $validated));
+    }
 }

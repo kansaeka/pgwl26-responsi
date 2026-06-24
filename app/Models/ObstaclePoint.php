@@ -116,4 +116,22 @@ class ObstaclePoint extends Model
             'message' => 'Hambatan berhasil dihapus'
         ];
     }
+
+    public static function updateGeometry($id, array $data)
+    {
+        DB::update("
+        UPDATE pedestrian_obstacles
+        SET geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)
+        WHERE id = ?
+    ", [
+            $data['lng'],
+            $data['lat'],
+            $id
+        ]);
+
+        return [
+            'status' => 'success',
+            'message' => 'Lokasi hambatan berhasil diperbarui'
+        ];
+    }
 }

@@ -39,6 +39,7 @@ class PedestrianRoutePolyline extends Model
                 description,
                 priority_level,
                 recommendation,
+                image_path,
                 ST_AsGeoJSON(geom) AS geometry
             FROM pedestrian_routes
         ");
@@ -56,7 +57,8 @@ class PedestrianRoutePolyline extends Model
                     'category' => $row->category,
                     'description' => $row->description,
                     'priority_level' => $row->priority_level,
-                    'recommendation' => $row->recommendation
+                    'recommendation' => $row->recommendation,
+                    'image_path' => $row->image_path
                 ]
             ];
         }
@@ -142,6 +144,23 @@ class PedestrianRoutePolyline extends Model
         return [
             'status' => 'success',
             'message' => 'Jalur pedestrian berhasil dihapus'
+        ];
+    }
+
+    public static function updateGeometry($id, array $data)
+    {
+        DB::update("
+        UPDATE pedestrian_routes
+        SET geom = ST_SetSRID(ST_GeomFromText(?), 4326)
+        WHERE id = ?
+    ", [
+            $data['wkt'],
+            $id
+        ]);
+
+        return [
+            'status' => 'success',
+            'message' => 'Bentuk jalur pedestrian berhasil diperbarui'
         ];
     }
 }

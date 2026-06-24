@@ -21,6 +21,12 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
 
+Route::get('/images/{type}/{id}', [ImageUploadController::class, 'form'])
+    ->where('type', 'facility|obstacle|route|zone');
+
+Route::post('/images/{type}/{id}', [ImageUploadController::class, 'upload'])
+    ->where('type', 'facility|obstacle|route|zone');
+
 Route::middleware('auth')->group(function () {
     Route::get('/', function () {
         return view('webgis');
@@ -59,4 +65,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/obstacles/{id}/image', [ImageUploadController::class, 'obstacleForm']);
     Route::post('/obstacles/{id}/image', [ImageUploadController::class, 'obstacleUpload']);
+
+    Route::put('/api/facilities/{id}/geometry', [FacilityPointController::class, 'updateGeometry']);
+    Route::put('/api/obstacles/{id}/geometry', [ObstaclePointController::class, 'updateGeometry']);
+    Route::put('/api/routes/{id}/geometry', [PedestrianRoutePolylineController::class, 'updateGeometry']);
+    Route::put('/api/zones/{id}/geometry', [ComfortZonePolygonController::class, 'updateGeometry']);
 });

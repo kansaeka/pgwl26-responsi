@@ -92,4 +92,22 @@ class FacilityPoint extends Model
             'message' => 'Fasilitas berhasil dihapus'
         ];
     }
+
+    public static function updateGeometry($id, array $data)
+    {
+        DB::update("
+        UPDATE facilities
+        SET geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)
+        WHERE id = ?
+    ", [
+            $data['lng'],
+            $data['lat'],
+            $id
+        ]);
+
+        return [
+            'status' => 'success',
+            'message' => 'Lokasi fasilitas berhasil diperbarui'
+        ];
+    }
 }

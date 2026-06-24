@@ -39,6 +39,7 @@ class ComfortZonePolygon extends Model
                 description,
                 priority_level,
                 recommendation,
+                image_path,
                 ST_AsGeoJSON(geom) AS geometry
             FROM comfort_zones
         ");
@@ -56,7 +57,9 @@ class ComfortZonePolygon extends Model
                     'score' => $row->score,
                     'description' => $row->description,
                     'priority_level' => $row->priority_level,
-                    'recommendation' => $row->recommendation
+                    'recommendation' => $row->recommendation,
+                    'image_path' => $row->image_path
+
                 ]
             ];
         }
@@ -142,6 +145,23 @@ class ComfortZonePolygon extends Model
         return [
             'status' => 'success',
             'message' => 'Zona kenyamanan berhasil dihapus'
+        ];
+    }
+
+    public static function updateGeometry($id, array $data)
+    {
+        DB::update("
+        UPDATE comfort_zones
+        SET geom = ST_SetSRID(ST_GeomFromText(?), 4326)
+        WHERE id = ?
+    ", [
+            $data['wkt'],
+            $id
+        ]);
+
+        return [
+            'status' => 'success',
+            'message' => 'Bentuk zona kenyamanan berhasil diperbarui'
         ];
     }
 }

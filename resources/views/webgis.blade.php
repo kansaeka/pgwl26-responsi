@@ -10,17 +10,14 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
     <link rel="stylesheet" href="{{ asset('css/webgis.css') }}">
-
 </head>
 
 <body>
 
     @include('components.navbar')
 
-    <!-- Peta utama -->
     <div id="map"></div>
 
-    <!-- Sidebar kiri -->
     <aside class="left-sidebar">
 
         <div class="crud-box">
@@ -75,7 +72,6 @@
 
     </aside>
 
-    <!-- Sidebar kanan -->
     <aside class="right-sidebar">
 
         <div class="stats-box">
@@ -93,27 +89,33 @@
             <h4>Legenda</h4>
 
             <div class="legend-item">
-                <span class="legend-color" style="background:#3b82f6;"></span> Fasilitas Kampus
+                <span class="legend-color" style="background:#3b82f6;"></span>
+                Fasilitas Kampus
             </div>
 
             <div class="legend-item">
-                <span class="legend-color" style="background:#ef4444;"></span> Hambatan Pedestrian
+                <span class="legend-color" style="background:#ef4444;"></span>
+                Hambatan Pedestrian
             </div>
 
             <div class="legend-item">
-                <span class="line-green"></span> Jalur Nyaman
+                <span class="line-green"></span>
+                Jalur Nyaman
             </div>
 
             <div class="legend-item">
-                <span class="line-orange"></span> Jalur Cukup Nyaman
+                <span class="line-orange"></span>
+                Jalur Cukup Nyaman
             </div>
 
             <div class="legend-item">
-                <span class="line-red"></span> Jalur Kurang Nyaman
+                <span class="line-red"></span>
+                Jalur Kurang Nyaman
             </div>
 
             <div class="legend-item">
-                <span class="polygon-box"></span> Zona Kenyamanan
+                <span class="polygon-box"></span>
+                Zona Kenyamanan
             </div>
 
             <hr>

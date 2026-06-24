@@ -117,7 +117,7 @@ function loadFacilities(filterCategory = 'all') {
                     facilityCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-    <div class="popup-card">
+    <div class="popup-card popup-facility">
         <div class="popup-header">
             <strong>${feature.properties.name}</strong>
             <span class="popup-badge">${feature.properties.category ?? '-'}</span>
@@ -171,7 +171,7 @@ function loadObstacles(filterSeverity = 'all') {
                     obstacleCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-    <div class="popup-card">
+    <div class="popup-card popup-obstacle">
         <div class="popup-header">
             <strong>${feature.properties.name}</strong>
             <span class="popup-badge severity">${feature.properties.severity ?? '-'}</span>
@@ -228,7 +228,7 @@ function loadRoutes(filterCategory = 'all') {
                     routeCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-    <div class="popup-card">
+    <div class="popup-card popup-route">
         <div class="popup-header">
             <strong>${feature.properties.route_name}</strong>
             <span class="popup-badge route">${feature.properties.category ?? '-'}</span>
@@ -282,7 +282,7 @@ function loadZones() {
                     zoneCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-    <div class="popup-card">
+    <div class="popup-card popup-zone">
         <div class="popup-header">
             <strong>${feature.properties.zone_name}</strong>
             <span class="popup-badge route">${feature.properties.comfort_level ?? '-'}</span>
@@ -964,11 +964,10 @@ function showToast(message) {
     var toastMessage = document.getElementById('toastMessage');
 
     toastMessage.textContent = message;
-    // Use CSS class to control visibility/animation
-    toast.classList.add('show');
+    toast.style.display = 'block';
 
     setTimeout(function () {
-        toast.classList.remove('show');
+        toast.style.display = 'none';
     }, 2500);
 }
 
@@ -993,14 +992,25 @@ function popupImage(feature) {
 }
 
 function popupActions(type, id) {
-    var geometryLabel = (type === 'facility' || type === 'obstacle') ? '🧭 Lokasi' : '🧭 Bentuk';
+    var geometryTitle = (type === 'facility' || type === 'obstacle') ? 'Ubah Lokasi' : 'Ubah Bentuk';
 
     return `
         <div class="popup-actions">
-            <button class="popup-action-btn edit" onclick="editFeature('${type}', ${id})">✏️ Edit</button>
-            <button class="popup-action-btn upload" onclick="uploadImage('${type}', ${id})">📷 Upload</button>
-            <button class="popup-action-btn edit" onclick="startEditGeometry('${type}', ${id})">${geometryLabel}</button>
-            <button class="popup-action-btn remove" onclick="deleteFeature('${type}', ${id})">🗑️ Hapus</button>
+            <button class="popup-action-btn edit" title="Edit" onclick="editFeature('${type}', ${id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.41l-2.34-2.34a1.003 1.003 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>
+            </button>
+
+            <button class="popup-action-btn upload" title="Upload Foto" onclick="uploadImage('${type}', ${id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 20h14a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-3.17l-1.84-2.21A2 2 0 0 0 13.46 3H10.54a2 2 0 0 0-1.53.79L7.17 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1zM12 17a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" fill="currentColor"/></svg>
+            </button>
+
+            <button class="popup-action-btn geometry" title="${geometryTitle}" onclick="startEditGeometry('${type}', ${id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" fill="currentColor"/></svg>
+            </button>
+
+            <button class="popup-action-btn remove" title="Hapus" onclick="deleteFeature('${type}', ${id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></svg>
+            </button>
         </div>
     `;
 }

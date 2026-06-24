@@ -40,4 +40,14 @@ class FacilityPointController extends Controller
     {
         return response()->json(FacilityPoint::deleteData($id));
     }
+
+    public function updateGeometry(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'lat' => 'required|numeric',
+            'lng' => 'required|numeric',
+        ]);
+
+        return response()->json(FacilityPoint::updateGeometry($id, $validated));
+    }
 }

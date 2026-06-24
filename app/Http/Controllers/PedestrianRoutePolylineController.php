@@ -42,4 +42,13 @@ class PedestrianRoutePolylineController extends Controller
     {
         return response()->json(PedestrianRoutePolyline::deleteData($id));
     }
+
+    public function updateGeometry(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'wkt' => 'required|string',
+        ]);
+
+        return response()->json(PedestrianRoutePolyline::updateGeometry($id, $validated));
+    }
 }

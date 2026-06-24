@@ -44,4 +44,14 @@ class ObstaclePointController extends Controller
     {
         return response()->json(ObstaclePoint::deleteData($id));
     }
+
+    public function updateGeometry(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'lat' => 'required|numeric',
+            'lng' => 'required|numeric',
+        ]);
+
+        return response()->json(ObstaclePoint::updateGeometry($id, $validated));
+    }
 }
