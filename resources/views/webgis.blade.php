@@ -15,11 +15,7 @@
 
 <body>
 
-    <!-- HTML: kotak judul -->
-    <div class="title-box">
-        <h3>Walk the Talk</h3>
-        <p>WebGIS Evaluasi Walkability Kawasan UGM</p>
-    </div>
+    @include('components.navbar')
 
     <div class="crud-box">
         <h4>Tambah Data</h4>

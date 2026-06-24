@@ -4,10 +4,59 @@ var initialZoom = 16;
 
 var map = L.map('map').setView(initialCenter, initialZoom);
 
-// 2. Basemap OpenStreetMap
+// Base map: OpenStreetMap
 var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20,
-    attribution: '© OpenStreetMap'
+    attribution: '© OpenStreetMap contributors'
+});
+
+// Base map: Citra Satelit Esri
+var esriImagery = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+        maxZoom: 20,
+        attribution: 'Tiles © Esri'
+    }
+);
+
+// Label untuk citra satelit
+var esriLabels = L.tileLayer(
+    'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    {
+        maxZoom: 20,
+        attribution: 'Labels © Esri'
+    }
+);
+
+// Gabungan citra satelit + label
+var satelliteMap = L.layerGroup([esriImagery, esriLabels]);
+
+// Base map: Carto Light
+var cartoLight = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    {
+        maxZoom: 20,
+        attribution: '© OpenStreetMap contributors © CARTO'
+    }
+);
+
+// Base map: Carto Dark
+var cartoDark = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {
+        maxZoom: 20,
+        attribution: '© OpenStreetMap contributors © CARTO'
+    }
+);
+
+// Default basemap
+satelliteMap.addTo(map);
+
+// Scale bar
+L.control.scale({
+    metric: true,
+    imperial: false,
+    position: 'bottomleft'
 }).addTo(map);
 
 // 3. Layer group untuk layer control
@@ -216,15 +265,23 @@ function loadZones() {
 }
 
 // 10. Layer control
-var overlayMaps = {
-    "Fasilitas Kampus": facilitiesLayer,
-    "Hambatan Pedestrian": obstaclesLayer,
-    "Jalur Pedestrian": routesLayer,
-    "Zona Kenyamanan": zonesLayer
+var baseMaps = {
+    "🛰️ Citra Satelit": satelliteMap,
+    "🗺️ OpenStreetMap": osm,
+    "⬜ Peta Terang": cartoLight,
+    "⬛ Peta Gelap": cartoDark
 };
 
-L.control.layers(null, overlayMaps, {
-    collapsed: false
+var overlayMaps = {
+    "🏛️ Fasilitas Kampus": facilitiesLayer,
+    "⚠️ Hambatan Pedestrian": obstaclesLayer,
+    "🚶 Jalur Pedestrian": routesLayer,
+    "🟩 Zona Kenyamanan": zonesLayer
+};
+
+L.control.layers(baseMaps, overlayMaps, {
+    collapsed: true,
+    position: 'topright'
 }).addTo(map);
 
 var drawnItems = new L.FeatureGroup();
@@ -834,4 +891,10 @@ function showToast(message) {
     setTimeout(function () {
         toast.style.display = 'none';
     }, 2500);
+}
+
+function showAbout() {
+    showToast(
+        'Walk the Talk adalah WebGIS interaktif untuk mengevaluasi walkability kawasan UGM melalui pemetaan fasilitas, hambatan pedestrian, jalur pedestrian, zona kenyamanan, serta prioritas perbaikan.'
+    );
 }
