@@ -117,14 +117,21 @@ function loadFacilities(filterCategory = 'all') {
                     facilityCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <b>${feature.properties.name}</b><br>
-                        Kategori: ${feature.properties.category}<br>
-                        ${feature.properties.description}<br>
-                        ${feature.properties.image_path ? `<br><img src="/${feature.properties.image_path}" width="190" style="margin-top:8px;border-radius:6px;">` : ''}
-                        <br><br>
-                        <button onclick="editFacility(${feature.properties.id})">Edit</button>
-                        <button onclick="deleteFacility(${feature.properties.id})">Hapus</button>
-                        <button onclick="window.location.href='/facilities/${feature.properties.id}/image'">Upload Gambar</button>
+                        <div class="popup-card">
+                            <div class="popup-header">
+                                <strong>${feature.properties.name}</strong>
+                                <span class="popup-badge">${feature.properties.category}</span>
+                            </div>
+                            <div class="popup-meta">
+                                <div class="popup-meta-row"><span>Deskripsi</span><span>${feature.properties.description ? 'Lengkap' : 'Tidak ada'}</span></div>
+                            </div>
+                            ${feature.properties.image_path ? `<img src="/${feature.properties.image_path}" alt="${feature.properties.name}">` : ''}
+                            <div class="popup-actions">
+                                <button class="popup-action-btn edit" onclick="editFacility(${feature.properties.id})">✏️ Edit</button>
+                                <button class="popup-action-btn remove" onclick="deleteFacility(${feature.properties.id})">🗑️ Hapus</button>
+                                <button class="popup-action-btn upload" onclick="window.location.href='/facilities/${feature.properties.id}/image'">📷 Upload</button>
+                            </div>
+                        </div>
                     `);
 
                     // Tambahkan ke indeks pencarian
@@ -165,24 +172,29 @@ function loadObstacles(filterSeverity = 'all') {
                     obstacleCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <b>${feature.properties.name}</b><br>
-                        Jenis: ${feature.properties.obstacle_type}<br>
-                        Tingkat: ${feature.properties.severity}<br>
-                        Prioritas Perbaikan: ${feature.properties.priority_level ?? '-'}<br><br>
-
-                        <b>Keterangan:</b><br>
-                        ${feature.properties.description}<br><br>
-
-                        <b>Rekomendasi:</b><br>
-                        ${feature.properties.recommendation ?? '-'}<br>
-
-                        ${feature.properties.image_path ? `<br><img src="/${feature.properties.image_path}" width="190" style="margin-top:8px;border-radius:6px;">` : ''}
-
-                        <br><br>
-                        <button onclick="editObstacle(${feature.properties.id})">Edit</button>
-                        <button onclick="deleteObstacle(${feature.properties.id})">Hapus</button>
-                        <button onclick="window.location.href='/obstacles/${feature.properties.id}/image'">Upload Gambar</button>
-                `);
+                        <div class="popup-card">
+                            <div class="popup-header">
+                                <strong>${feature.properties.name}</strong>
+                                <span class="popup-badge severity">${feature.properties.severity}</span>
+                            </div>
+                            <div class="popup-meta">
+                                <div class="popup-meta-row"><span>Jenis Hambatan</span><span>${feature.properties.obstacle_type}</span></div>
+                                <div class="popup-meta-row"><span>Prioritas</span><span>${feature.properties.priority_level ?? '-'}</span></div>
+                            </div>
+                            <div class="popup-description">
+                                <strong>Keterangan</strong>
+                                <p>${feature.properties.description}</p>
+                                <strong>Rekomendasi</strong>
+                                <p>${feature.properties.recommendation ?? '-'}</p>
+                            </div>
+                            ${feature.properties.image_path ? `<img src="/${feature.properties.image_path}" alt="${feature.properties.name}">` : ''}
+                            <div class="popup-actions">
+                                <button class="popup-action-btn edit" onclick="editObstacle(${feature.properties.id})">✏️ Edit</button>
+                                <button class="popup-action-btn remove" onclick="deleteObstacle(${feature.properties.id})">🗑️ Hapus</button>
+                                <button class="popup-action-btn upload" onclick="window.location.href='/obstacles/${feature.properties.id}/image'">📷 Upload</button>
+                            </div>
+                        </div>
+                    `);
                 }
             }).addTo(obstaclesLayer);
         });
@@ -212,18 +224,28 @@ function loadRoutes(filterCategory = 'all') {
                     routeCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <b>${feature.properties.route_name}</b><br>
-                        Kategori: ${feature.properties.category}<br>
-                        Skor: ${feature.properties.score}<br>
-                        Prioritas Perbaikan: ${feature.properties.priority_level ?? '-'}<br><br>
-                        <b>Keterangan:</b><br>
-                        ${feature.properties.description}<br><br>
-                        <b>Rekomendasi:</b><br>
-                        ${feature.properties.recommendation ?? '-'}<br><br>
-                        <button onclick="editRouteAttribute(${feature.properties.id})">Edit Atribut</button>
-                        <button onclick="startEditRouteGeometry(${feature.properties.id})">Edit Bentuk</button>
-                        <button onclick="deleteRoute(${feature.properties.id})">Hapus</button>
-            `);
+                        <div class="popup-card">
+                            <div class="popup-header">
+                                <strong>${feature.properties.route_name}</strong>
+                                <span class="popup-badge route">${feature.properties.category}</span>
+                            </div>
+                            <div class="popup-meta">
+                                <div class="popup-meta-row"><span>Skor</span><span>${feature.properties.score}</span></div>
+                                <div class="popup-meta-row"><span>Prioritas</span><span>${feature.properties.priority_level ?? '-'}</span></div>
+                            </div>
+                            <div class="popup-description">
+                                <strong>Keterangan</strong>
+                                <p>${feature.properties.description}</p>
+                                <strong>Rekomendasi</strong>
+                                <p>${feature.properties.recommendation ?? '-'}</p>
+                            </div>
+                            <div class="popup-actions">
+                                <button class="popup-action-btn edit" onclick="editRouteAttribute(${feature.properties.id})">✏️ Atribut</button>
+                                <button class="popup-action-btn edit" onclick="startEditRouteGeometry(${feature.properties.id})">🧭 Bentuk</button>
+                                <button class="popup-action-btn remove" onclick="deleteRoute(${feature.properties.id})">🗑️ Hapus</button>
+                            </div>
+                        </div>
+                    `);
                 }
             }).addTo(routesLayer);
         });
@@ -250,14 +272,24 @@ function loadZones() {
                     zoneCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <b>${feature.properties.zone_name}</b><br>
-                        Tingkat kenyamanan: ${feature.properties.comfort_level}<br>
-                        Skor: ${feature.properties.score}<br><br>
-                        <b>Keterangan dan Rekomendasi:</b><br>
-                        ${feature.properties.description}<br><br>
-                        <button onclick="editZoneAttribute(${feature.properties.id})">Edit Atribut</button>
-                        <button onclick="startEditZoneGeometry(${feature.properties.id})">Edit Bentuk</button>
-                        <button onclick="deleteZone(${feature.properties.id})">Hapus</button>
+                        <div class="popup-card">
+                            <div class="popup-header">
+                                <strong>${feature.properties.zone_name}</strong>
+                                <span class="popup-badge route">${feature.properties.comfort_level}</span>
+                            </div>
+                            <div class="popup-meta">
+                                <div class="popup-meta-row"><span>Skor</span><span>${feature.properties.score}</span></div>
+                            </div>
+                            <div class="popup-description">
+                                <strong>Keterangan & Rekomendasi</strong>
+                                <p>${feature.properties.description}</p>
+                            </div>
+                            <div class="popup-actions">
+                                <button class="popup-action-btn edit" onclick="editZoneAttribute(${feature.properties.id})">✏️ Atribut</button>
+                                <button class="popup-action-btn edit" onclick="startEditZoneGeometry(${feature.properties.id})">🧭 Bentuk</button>
+                                <button class="popup-action-btn remove" onclick="deleteZone(${feature.properties.id})">🗑️ Hapus</button>
+                            </div>
+                        </div>
                     `);
                 }
             }).addTo(zonesLayer);
