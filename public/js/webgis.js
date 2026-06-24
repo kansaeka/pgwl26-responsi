@@ -117,22 +117,21 @@ function loadFacilities(filterCategory = 'all') {
                     facilityCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <div class="popup-card">
-                            <div class="popup-header">
-                                <strong>${feature.properties.name}</strong>
-                                <span class="popup-badge">${feature.properties.category}</span>
-                            </div>
-                            <div class="popup-meta">
-                                <div class="popup-meta-row"><span>Deskripsi</span><span>${feature.properties.description ? 'Lengkap' : 'Tidak ada'}</span></div>
-                            </div>
-                            ${feature.properties.image_path ? `<img src="/${feature.properties.image_path}" alt="${feature.properties.name}">` : ''}
-                            <div class="popup-actions">
-                                <button class="popup-action-btn edit" onclick="editFacility(${feature.properties.id})">✏️ Edit</button>
-                                <button class="popup-action-btn remove" onclick="deleteFacility(${feature.properties.id})">🗑️ Hapus</button>
-                                <button class="popup-action-btn upload" onclick="window.location.href='/facilities/${feature.properties.id}/image'">📷 Upload</button>
-                            </div>
-                        </div>
-                    `);
+    <div class="popup-card">
+        <div class="popup-header">
+            <strong>${feature.properties.name}</strong>
+            <span class="popup-badge">${feature.properties.category ?? '-'}</span>
+        </div>
+
+        <div class="popup-description">
+            <strong>Keterangan</strong>
+            <p>${feature.properties.description ?? '-'}</p>
+        </div>
+
+        ${popupImage(feature)}
+        ${popupActions('facility', feature.properties.id)}
+    </div>
+`);
 
                     // Tambahkan ke indeks pencarian
                     facilitySearchIndex.push({
@@ -172,29 +171,34 @@ function loadObstacles(filterSeverity = 'all') {
                     obstacleCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <div class="popup-card">
-                            <div class="popup-header">
-                                <strong>${feature.properties.name}</strong>
-                                <span class="popup-badge severity">${feature.properties.severity}</span>
-                            </div>
-                            <div class="popup-meta">
-                                <div class="popup-meta-row"><span>Jenis Hambatan</span><span>${feature.properties.obstacle_type}</span></div>
-                                <div class="popup-meta-row"><span>Prioritas</span><span>${feature.properties.priority_level ?? '-'}</span></div>
-                            </div>
-                            <div class="popup-description">
-                                <strong>Keterangan</strong>
-                                <p>${feature.properties.description}</p>
-                                <strong>Rekomendasi</strong>
-                                <p>${feature.properties.recommendation ?? '-'}</p>
-                            </div>
-                            ${feature.properties.image_path ? `<img src="/${feature.properties.image_path}" alt="${feature.properties.name}">` : ''}
-                            <div class="popup-actions">
-                                <button class="popup-action-btn edit" onclick="editObstacle(${feature.properties.id})">✏️ Edit</button>
-                                <button class="popup-action-btn remove" onclick="deleteObstacle(${feature.properties.id})">🗑️ Hapus</button>
-                                <button class="popup-action-btn upload" onclick="window.location.href='/obstacles/${feature.properties.id}/image'">📷 Upload</button>
-                            </div>
-                        </div>
-                    `);
+    <div class="popup-card">
+        <div class="popup-header">
+            <strong>${feature.properties.name}</strong>
+            <span class="popup-badge severity">${feature.properties.severity ?? '-'}</span>
+        </div>
+
+        <div class="popup-meta">
+            <div class="popup-meta-row">
+                <span>Jenis Hambatan</span>
+                <span>${feature.properties.obstacle_type ?? '-'}</span>
+            </div>
+            <div class="popup-meta-row">
+                <span>Prioritas</span>
+                <span>${feature.properties.priority_level ?? '-'}</span>
+            </div>
+        </div>
+
+        <div class="popup-description">
+            <strong>Keterangan</strong>
+            <p>${feature.properties.description ?? '-'}</p>
+            <strong>Rekomendasi</strong>
+            <p>${feature.properties.recommendation ?? '-'}</p>
+        </div>
+
+        ${popupImage(feature)}
+        ${popupActions('obstacle', feature.properties.id)}
+    </div>
+`);
                 }
             }).addTo(obstaclesLayer);
         });
@@ -224,28 +228,34 @@ function loadRoutes(filterCategory = 'all') {
                     routeCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <div class="popup-card">
-                            <div class="popup-header">
-                                <strong>${feature.properties.route_name}</strong>
-                                <span class="popup-badge route">${feature.properties.category}</span>
-                            </div>
-                            <div class="popup-meta">
-                                <div class="popup-meta-row"><span>Skor</span><span>${feature.properties.score}</span></div>
-                                <div class="popup-meta-row"><span>Prioritas</span><span>${feature.properties.priority_level ?? '-'}</span></div>
-                            </div>
-                            <div class="popup-description">
-                                <strong>Keterangan</strong>
-                                <p>${feature.properties.description}</p>
-                                <strong>Rekomendasi</strong>
-                                <p>${feature.properties.recommendation ?? '-'}</p>
-                            </div>
-                            <div class="popup-actions">
-                                <button class="popup-action-btn edit" onclick="editRouteAttribute(${feature.properties.id})">✏️ Atribut</button>
-                                <button class="popup-action-btn edit" onclick="startEditRouteGeometry(${feature.properties.id})">🧭 Bentuk</button>
-                                <button class="popup-action-btn remove" onclick="deleteRoute(${feature.properties.id})">🗑️ Hapus</button>
-                            </div>
-                        </div>
-                    `);
+    <div class="popup-card">
+        <div class="popup-header">
+            <strong>${feature.properties.route_name}</strong>
+            <span class="popup-badge route">${feature.properties.category ?? '-'}</span>
+        </div>
+
+        <div class="popup-meta">
+            <div class="popup-meta-row">
+                <span>Skor</span>
+                <span>${feature.properties.score ?? '-'}</span>
+            </div>
+            <div class="popup-meta-row">
+                <span>Prioritas</span>
+                <span>${feature.properties.priority_level ?? '-'}</span>
+            </div>
+        </div>
+
+        <div class="popup-description">
+            <strong>Keterangan</strong>
+            <p>${feature.properties.description ?? '-'}</p>
+            <strong>Rekomendasi</strong>
+            <p>${feature.properties.recommendation ?? '-'}</p>
+        </div>
+
+        ${popupImage(feature)}
+        ${popupActions('route', feature.properties.id)}
+    </div>
+`);
                 }
             }).addTo(routesLayer);
         });
@@ -272,25 +282,34 @@ function loadZones() {
                     zoneCache[feature.properties.id] = feature.properties;
 
                     layer.bindPopup(`
-                        <div class="popup-card">
-                            <div class="popup-header">
-                                <strong>${feature.properties.zone_name}</strong>
-                                <span class="popup-badge route">${feature.properties.comfort_level}</span>
-                            </div>
-                            <div class="popup-meta">
-                                <div class="popup-meta-row"><span>Skor</span><span>${feature.properties.score}</span></div>
-                            </div>
-                            <div class="popup-description">
-                                <strong>Keterangan & Rekomendasi</strong>
-                                <p>${feature.properties.description}</p>
-                            </div>
-                            <div class="popup-actions">
-                                <button class="popup-action-btn edit" onclick="editZoneAttribute(${feature.properties.id})">✏️ Atribut</button>
-                                <button class="popup-action-btn edit" onclick="startEditZoneGeometry(${feature.properties.id})">🧭 Bentuk</button>
-                                <button class="popup-action-btn remove" onclick="deleteZone(${feature.properties.id})">🗑️ Hapus</button>
-                            </div>
-                        </div>
-                    `);
+    <div class="popup-card">
+        <div class="popup-header">
+            <strong>${feature.properties.zone_name}</strong>
+            <span class="popup-badge route">${feature.properties.comfort_level ?? '-'}</span>
+        </div>
+
+        <div class="popup-meta">
+            <div class="popup-meta-row">
+                <span>Skor</span>
+                <span>${feature.properties.score ?? '-'}</span>
+            </div>
+            <div class="popup-meta-row">
+                <span>Prioritas</span>
+                <span>${feature.properties.priority_level ?? '-'}</span>
+            </div>
+        </div>
+
+        <div class="popup-description">
+            <strong>Keterangan</strong>
+            <p>${feature.properties.description ?? '-'}</p>
+            <strong>Rekomendasi</strong>
+            <p>${feature.properties.recommendation ?? '-'}</p>
+        </div>
+
+        ${popupImage(feature)}
+        ${popupActions('zone', feature.properties.id)}
+    </div>
+`);
                 }
             }).addTo(zonesLayer);
         });
@@ -371,16 +390,21 @@ map.on(L.Draw.Event.CREATED, function (event) {
 
     // Mode edit bentuk/geometri
     if (geometryEditMode !== null) {
-        if (geometryEditMode.type === 'route') {
-            if (layerType !== 'polyline') {
-                showToast('Gambar ulang jalur pedestrian menggunakan ikon garis/polyline pada toolbar peta.');
+        var type = geometryEditMode.type;
+        var id = geometryEditMode.id;
+
+        if (type === 'facility' || type === 'obstacle') {
+            if (layerType !== 'marker') {
+                showToast('Untuk mengubah lokasi titik, gunakan marker.');
                 return;
             }
 
-            var oldData = geometryEditMode.data;
-            var wkt = polylineToWKT(layer);
+            var latlng = layer.getLatLng();
+            var endpoint = type === 'facility'
+                ? `/api/facilities/${id}/geometry`
+                : `/api/obstacles/${id}/geometry`;
 
-            fetch('/api/routes/' + geometryEditMode.id, {
+            fetch(endpoint, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -388,10 +412,38 @@ map.on(L.Draw.Event.CREATED, function (event) {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
-                    route_name: oldData.route_name,
-                    score: oldData.score,
-                    category: oldData.category,
-                    description: oldData.description,
+                    lat: latlng.lat,
+                    lng: latlng.lng
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    geometryEditMode = null;
+                    showToast(data.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1200);
+                });
+
+            return;
+        }
+
+        if (type === 'route') {
+            if (layerType !== 'polyline') {
+                showToast('Untuk mengubah bentuk jalur, gunakan garis/polyline.');
+                return;
+            }
+
+            var wkt = polylineToWKT(layer);
+
+            fetch(`/api/routes/${id}/geometry`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
                     wkt: wkt
                 })
             })
@@ -407,16 +459,15 @@ map.on(L.Draw.Event.CREATED, function (event) {
             return;
         }
 
-        if (geometryEditMode.type === 'zone') {
+        if (type === 'zone') {
             if (layerType !== 'polygon') {
-                showToast('Untuk mengedit bentuk zona, gunakan polygon/area.');
+                showToast('Untuk mengubah bentuk zona, gunakan polygon.');
                 return;
             }
 
-            var oldData = geometryEditMode.data;
             var wkt = polygonToWKT(layer);
 
-            fetch('/api/zones/' + geometryEditMode.id, {
+            fetch(`/api/zones/${id}/geometry`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -424,10 +475,6 @@ map.on(L.Draw.Event.CREATED, function (event) {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
-                    zone_name: oldData.zone_name,
-                    score: oldData.score,
-                    comfort_level: oldData.comfort_level,
-                    description: oldData.description,
                     wkt: wkt
                 })
             })
@@ -443,6 +490,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
             return;
         }
     }
+
 
     // Tambah fasilitas kampus
     if (drawType === 'facility') {
@@ -916,10 +964,11 @@ function showToast(message) {
     var toastMessage = document.getElementById('toastMessage');
 
     toastMessage.textContent = message;
-    toast.style.display = 'block';
+    // Use CSS class to control visibility/animation
+    toast.classList.add('show');
 
     setTimeout(function () {
-        toast.style.display = 'none';
+        toast.classList.remove('show');
     }, 2500);
 }
 
@@ -927,4 +976,74 @@ function showAbout() {
     showToast(
         'Walk the Talk adalah WebGIS interaktif untuk mengevaluasi walkability kawasan UGM melalui pemetaan fasilitas, hambatan pedestrian, jalur pedestrian, zona kenyamanan, serta prioritas perbaikan.'
     );
+}
+
+function popupImage(feature) {
+    if (!feature.properties.image_path) {
+        return '';
+    }
+
+    return `
+        <img
+            src="/${feature.properties.image_path}"
+            alt="Dokumentasi"
+            style="width:100%; max-height:140px; object-fit:cover; border-radius:8px; margin:8px 0;"
+        >
+    `;
+}
+
+function popupActions(type, id) {
+    var geometryLabel = (type === 'facility' || type === 'obstacle') ? '🧭 Lokasi' : '🧭 Bentuk';
+
+    return `
+        <div class="popup-actions">
+            <button class="popup-action-btn edit" onclick="editFeature('${type}', ${id})">✏️ Edit</button>
+            <button class="popup-action-btn upload" onclick="uploadImage('${type}', ${id})">📷 Upload</button>
+            <button class="popup-action-btn edit" onclick="startEditGeometry('${type}', ${id})">${geometryLabel}</button>
+            <button class="popup-action-btn remove" onclick="deleteFeature('${type}', ${id})">🗑️ Hapus</button>
+        </div>
+    `;
+}
+
+function uploadImage(type, id) {
+    window.location.href = `/images/${type}/${id}`;
+}
+
+function editFeature(type, id) {
+    if (type === 'facility') return editFacility(id);
+    if (type === 'obstacle') return editObstacle(id);
+    if (type === 'route') return editRouteAttribute(id);
+    if (type === 'zone') return editZoneAttribute(id);
+}
+
+function deleteFeature(type, id) {
+    if (type === 'facility') return deleteFacility(id);
+    if (type === 'obstacle') return deleteObstacle(id);
+    if (type === 'route') return deleteRoute(id);
+    if (type === 'zone') return deleteZone(id);
+}
+
+function startEditGeometry(type, id) {
+    var cacheMap = {
+        facility: facilityCache,
+        obstacle: obstacleCache,
+        route: routeCache,
+        zone: zoneCache
+    };
+
+    geometryEditMode = {
+        type: type,
+        id: id,
+        data: cacheMap[type][id]
+    };
+
+    if (type === 'facility') {
+        showToast('Klik ikon marker untuk menggambar ulang lokasi fasilitas.');
+    } else if (type === 'obstacle') {
+        showToast('Klik ikon marker untuk menggambar ulang lokasi hambatan.');
+    } else if (type === 'route') {
+        showToast('Gunakan garis/polyline untuk menggambar ulang jalur pedestrian.');
+    } else if (type === 'zone') {
+        showToast('Gunakan polygon untuk menggambar ulang zona kenyamanan.');
+    }
 }
