@@ -6,7 +6,7 @@
 
     <div class="nav-actions">
         <button type="button" onclick="resetView()">Reset View</button>
-        <button type="button" onclick="showAbout()">Tentang</button>
+        <button id="aboutMenuButton" type="button" class="about-menu-button" onclick="showAbout()">Tentang</button>
 
         <a href="https://github.com/kansaeka/pgwl26-responsi" target="_blank">
             GitHub

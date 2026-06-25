@@ -159,12 +159,14 @@ function loadObstacles(filterSeverity = 'all') {
                     return feature.properties.severity === filterSeverity;
                 },
                 pointToLayer: function (feature, latlng) {
+                    var scale = feature.properties.obstacle_scale ?? 3;
+
                     return L.circleMarker(latlng, {
-                        radius: 7,
-                        color: '#991b1b',
-                        fillColor: '#ef4444',
+                        radius: obstacleRadius(scale),
+                        color: '#7f1d1d',
+                        fillColor: obstacleColor(scale),
                         fillOpacity: 0.9,
-                        weight: 1
+                        weight: 1.5
                     });
                 },
                 onEachFeature: function (feature, layer) {
@@ -181,6 +183,14 @@ function loadObstacles(filterSeverity = 'all') {
             <div class="popup-meta-row">
                 <span>Jenis Hambatan</span>
                 <span>${feature.properties.obstacle_type ?? '-'}</span>
+            </div>
+            <div class="popup-meta-row">
+                <span>Tingkat</span>
+                <span>${feature.properties.severity ?? '-'}</span>
+        </div>
+            <div class="popup-meta-row">
+                <span>Skala Hambatan</span>
+                <span>${feature.properties.obstacle_scale ?? '-'}</span>
             </div>
             <div class="popup-meta-row">
                 <span>Prioritas</span>
@@ -202,6 +212,22 @@ function loadObstacles(filterSeverity = 'all') {
                 }
             }).addTo(obstaclesLayer);
         });
+}
+
+function obstacleColor(scale) {
+    scale = parseInt(scale);
+
+    if (scale >= 4) return '#ef4444'; // merah
+    if (scale === 3) return '#f97316'; // oranye
+    return '#facc15'; // kuning
+}
+
+function obstacleRadius(scale) {
+    scale = parseInt(scale);
+
+    if (scale >= 4) return 9;
+    if (scale === 3) return 7;
+    return 5;
 }
 
 // 8. Layer jalur pedestrian
@@ -544,7 +570,16 @@ map.on(L.Draw.Event.CREATED, function (event) {
         if (!name) return;
 
         var obstacleType = prompt('Jenis hambatan:', 'Hambatan Pedestrian');
-        var severity = prompt('Tingkat hambatan:', 'Sedang');
+        var obstacleScale = prompt('Skala hambatan 1-5:\n1 = sangat ringan\n2 = ringan\n3 = sedang\n4 = tinggi\n5 = sangat tinggi', '3');
+
+        if (!obstacleScale) return;
+
+        obstacleScale = parseInt(obstacleScale);
+
+        if (isNaN(obstacleScale) || obstacleScale < 1 || obstacleScale > 5) {
+            showToast('Skala hambatan harus berupa angka 1 sampai 5.');
+            return;
+        }
         var description = prompt('Deskripsi:', 'Titik hambatan pergerakan pejalan kaki');
 
         fetch('/api/obstacles', {
@@ -557,7 +592,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
             body: JSON.stringify({
                 name: name,
                 obstacle_type: obstacleType,
-                severity: severity,
+                oobstacle_scale: obstacleScale,
                 description: description,
                 lat: latlng.lat,
                 lng: latlng.lng
@@ -727,7 +762,19 @@ function editObstacle(id) {
     if (!name) return;
 
     var obstacleType = prompt('Edit jenis hambatan:', data.obstacle_type);
-    var severity = prompt('Edit tingkat hambatan:', data.severity);
+    var obstacleScale = prompt(
+        'Edit skala hambatan 1-5:\n1 = sangat ringan\n2 = ringan\n3 = sedang\n4 = tinggi\n5 = sangat tinggi',
+        data.obstacle_scale ?? 3
+    );
+
+    if (!obstacleScale) return;
+
+    obstacleScale = parseInt(obstacleScale);
+
+    if (isNaN(obstacleScale) || obstacleScale < 1 || obstacleScale > 5) {
+        showToast('Skala hambatan harus berupa angka 1 sampai 5.');
+        return;
+    }
     var description = prompt(
         'Keterangan dan rekomendasi:',
         'Titik hambatan pergerakan pejalan kaki. Rekomendasi: penataan ulang ruang pedestrian dan pengurangan konflik dengan kendaraan.'
@@ -741,7 +788,7 @@ function editObstacle(id) {
         body: JSON.stringify({
             name: name,
             obstacle_type: obstacleType,
-            severity: severity,
+            obstacle_scale: obstacleScale,
             description: description
         })
     })
@@ -963,19 +1010,59 @@ function showToast(message) {
     var toast = document.getElementById('toast');
     var toastMessage = document.getElementById('toastMessage');
 
-    toastMessage.textContent = message;
-    toast.style.display = 'block';
+    if (!toast || !toastMessage) {
+        console.warn('Toast element tidak ditemukan.');
+        return;
+    }
 
-    setTimeout(function () {
-        toast.style.display = 'none';
+    toastMessage.textContent = message;
+
+    toast.classList.add('show');
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer = setTimeout(function () {
+        toast.classList.remove('show');
     }, 2500);
 }
 
-function showAbout() {
-    showToast(
-        'Walk the Talk adalah WebGIS interaktif untuk mengevaluasi walkability kawasan UGM melalui pemetaan fasilitas, hambatan pedestrian, jalur pedestrian, zona kenyamanan, serta prioritas perbaikan.'
-    );
+function openAboutModal() {
+    var overlay = document.getElementById('aboutModalOverlay');
+    if (!overlay) {
+        return;
+    }
+
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
 }
+
+function closeAboutModal() {
+    var overlay = document.getElementById('aboutModalOverlay');
+    if (!overlay) {
+        return;
+    }
+
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+function showAbout() {
+    openAboutModal();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var overlay = document.getElementById('aboutModalOverlay');
+
+    if (overlay) {
+        overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) {
+                closeAboutModal();
+            }
+        });
+    }
+});
 
 function popupImage(feature) {
     if (!feature.properties.image_path) {

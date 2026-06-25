@@ -135,6 +135,15 @@
                     <li>Minim hambatan fisik</li>
                 </ol>
             </div>
+
+            <hr>
+
+            <div class="score-info">
+                <b>Skala Hambatan</b>
+                <p><span style="color:#facc15;">●</span> 1–2 = Ringan</p>
+                <p><span style="color:#f97316;">●</span> 3 = Sedang</p>
+                <p><span style="color:#ef4444;">●</span> 4–5 = Tinggi</p>
+            </div>
         </div>
 
     </aside>
@@ -142,6 +151,58 @@
     <div id="toast" class="toast-box">
         <strong>WalkTheTalk</strong>
         <p id="toastMessage">Pesan berhasil ditampilkan.</p>
+    </div>
+
+    <div id="aboutModalOverlay" class="about-modal-overlay" aria-hidden="true">
+        <div id="aboutModalContainer" class="about-modal-container" role="dialog" aria-modal="true"
+            aria-labelledby="aboutModalTitle">
+            <div class="about-modal-header">
+                <div>
+                    <h2 id="aboutModalTitle" class="about-modal-title">Tentang Walk the Talk</h2>
+                    <p class="about-modal-intro">WebGIS interaktif untuk evaluasi walkability kawasan Universitas Gadjah
+                        Mada.</p>
+                </div>
+                <button type="button" class="about-modal-close-btn" aria-label="Tutup Tentang"
+                    onclick="closeAboutModal()">
+                    &times;
+                </button>
+            </div>
+
+            <div class="about-modal-body">
+                <div class="about-modal-section">
+                    <p>Walk the Talk merupakan WebGIS interaktif yang dikembangkan untuk mengevaluasi tingkat
+                        walkability atau kenyamanan berjalan kaki di kawasan Universitas Gadjah Mada. Sistem ini
+                        menyajikan informasi spasial mengenai fasilitas kampus, hambatan pedestrian, jalur pejalan kaki,
+                        titik penyeberangan, zona kenyamanan, serta rute pendukung dalam satu tampilan peta digital yang
+                        informatif dan mudah digunakan.</p>
+                </div>
+
+                <div class="about-modal-section">
+                    <h4>Tujuan</h4>
+                    <p>Menyediakan media visual berbasis peta untuk membantu pengguna memahami kondisi aksesibilitas,
+                        kenyamanan, dan keamanan jalur pedestrian di kawasan UGM.</p>
+                </div>
+
+                <div class="about-modal-section">
+                    <h4>Data yang Ditampilkan</h4>
+                    <ul>
+                        <li>Titik fasilitas kampus</li>
+                        <li>Hambatan pedestrian</li>
+                        <li>Jalur pejalan kaki</li>
+                        <li>Titik penyeberangan</li>
+                        <li>Zona kenyamanan</li>
+                        <li>Rute pendukung mobilitas pejalan kaki</li>
+                    </ul>
+                </div>
+
+                <div class="about-modal-section">
+                    <h4>Manfaat</h4>
+                    <p>WebGIS ini dapat membantu proses analisis kondisi lingkungan kampus, mendukung evaluasi
+                        walkability, serta menjadi media informasi spasial yang berguna bagi mahasiswa, pengunjung, dan
+                        pihak yang berkepentingan dalam pengembangan kawasan kampus yang lebih ramah pejalan kaki.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Leaflet JS -->

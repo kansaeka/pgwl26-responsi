@@ -17,7 +17,7 @@ class ObstaclePointController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'obstacle_type' => 'nullable|string|max:100',
-            'severity' => 'required|in:Ringan,Sedang,Tinggi',
+            'obstacle_scale' => 'required|integer|min:1|max:5',
             'description' => 'nullable|string',
             'recommendation' => 'nullable|string',
             'lat' => 'required|numeric',
@@ -32,7 +32,7 @@ class ObstaclePointController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'obstacle_type' => 'nullable|string|max:100',
-            'severity' => 'required|in:Ringan,Sedang,Tinggi',
+            'obstacle_scale' => 'required|integer|min:1|max:5',
             'description' => 'nullable|string',
             'recommendation' => 'nullable|string',
         ]);
